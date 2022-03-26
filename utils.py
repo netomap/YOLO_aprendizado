@@ -4,6 +4,56 @@ from torchvision.ops.boxes import box_iou, _box_cxcywh_to_xyxy
 from PIL import Image, ImageDraw
 from tqdm import tqdm
 import numpy as np
+from datetime import datetime
+import os
+
+def salvar_checkpoint(model, S, B, C, IMG_SIZE, epochs):
+
+    if (not(os.path.exists('./models/'))):
+        os.mkdir('./models/')
+    
+    checkpoint = {
+        'state_dict': model.state_dict(),
+        'datetime': datetime.now(),
+        'S': model.S, 'B': model.B, 'C': model.C, 'IMG_SIZE': model.IMG_SIZE, 'epochs': epochs,
+        'descricao': str(model)
+    }
+    torch.save(checkpoint, f'./models/checkpoint_{epochs}_epochs.pth')
+
+def salvar_resultado_uma_epoca(model, dataset, epoch, device):
+    r"""
+    Faz uma simples predição em uma imagem do conjunto de teste.  
+    E salva na pasta ./results a imagem com as bboxes preditas pelo modelo.
+    
+    Args:  
+        model: modelo yolo.
+        dataset: Preferência pelo dataset do conjunto teste.
+        epoch: Número da época em questão.
+        device: cuda:0 ou cpu
+    
+    Returns: 
+        None
+
+    """
+    if (not(os.path.exists('./results/'))):
+        os.mkdir('./results')
+
+    model.eval()
+    img_pil = dataset.get_random_img_pil()
+    img_tensor = dataset.transformer(img_pil)
+    img_tensor = img_tensor.unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        predictions = model(img_tensor)
+    
+    predictions = predictions[0].detach().cpu()
+    S = model.S
+    predictions = predictions.reshape((S, S, 5))
+    img_pil, bboxes = desenhar_anotacoes(img_pil, predictions)
+
+    img_pil.save(f'./results/result_{epoch}_epoch.jpg')
+
+    return None
 
 def desenhar_anotacoes(img_pil, predictions_tensor, S, prob_threshold = 0.5, print_grid=False):
     r"""
@@ -67,6 +117,7 @@ def validacao(model, loss_fn, dataloader, device):
         Tensor numérico, valor médio das perdas dos lotes do dataloader do conjunto de dados teste. 
 
     """
+    print ('validação: ')
     model.eval()
     test_loss = []
     with torch.no_grad():
