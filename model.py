@@ -3,11 +3,6 @@ from torch import nn
 import warnings
 warnings.filterwarnings('ignore')
 
-S = 4 # número de grids
-C = 1 # número de classes
-B = 1 # número de bbox predito por célula
-IMG_SIZE = 300 # imagem para redimensionar e passar pela rede neural
-
 class YOLO(nn.Module):
 
     def __init__(self, S, C, B, IMG_SIZE):
@@ -64,7 +59,7 @@ class YOLO(nn.Module):
 
 if __name__ == '__main__':
 
-    model = YOLO(S, C, B, IMG_SIZE)
-    input = torch.rand((2, 3, IMG_SIZE, IMG_SIZE))
+    model = YOLO(4, 1, 1, 300)
+    input = torch.rand((2, 3, 300, 300))
     output = model(input)
     print (f'output.shape: {output.shape}')

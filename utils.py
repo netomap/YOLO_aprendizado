@@ -2,6 +2,82 @@ import torch
 from torch import nn
 from torchvision.ops.boxes import box_iou, _box_cxcywh_to_xyxy
 from PIL import Image, ImageDraw
+from tqdm import tqdm
+import numpy as np
+
+def desenhar_anotacoes(img_pil, predictions_tensor, S, prob_threshold = 0.5, print_grid=False):
+    r"""
+    Função que pega uma img_pil simples e desenha as anotações a partir de predictions_tensor.
+
+    Args:  
+        img_pil: Image PIL normal.  
+        predictions_tensor: Tensor de dimensão [S, S, 5] que pode vir da rede neural ou do próprio yolo_dataset (target)
+        prob_threshold: Limiar para considerar se tem ou não objeto. É predito pelo modelo e vem na primeira posição do bbox. 
+        pring_grid: Default false. Serve para imprimir as grids que a imagem é dividida 'virtualmente'
+    
+    Returns: 
+        img_pil: Mesma img_pil com suas anotações.
+        bboxes: Vetor numpy com as anotações transformadas em [x1, y1, x2, y2] em formato normal e absoluto.
+    """
+    assert predictions_tensor.shape == torch.rand((S, S, 5)).shape, "Tensor com shape inválido"
+
+    predictions_tensor = predictions_tensor.detach().cpu().numpy()
+
+    imgw, imgh = img_pil.size
+    cell_size = 1 / S # tamanho de cada célula em percentual
+    draw = ImageDraw.Draw(img_pil)
+
+    if (print_grid):
+        for k in range(S):
+            draw.line([k*cell_size*imgw, 0, k*cell_size*imgw, imgh], fill='red', width=1)
+            draw.line([0, k*cell_size*imgh, imgw, k*cell_size*imgh], fill='red', width=1)
+    
+    contador = 0
+    bboxes = []
+    for l in range(S):
+        for c in range(S):
+            prob = predictions_tensor[l, c, 0] # probabilidade de existir um objeto
+            if (prob >= prob_threshold):
+                contador += 1
+                xc_rel, yc_rel, w_rel, h_rel = predictions_tensor[l,c,1:]*cell_size
+                x1_cell, y1_cell = c*cell_size, l*cell_size
+                xc, yc = x1_cell + xc_rel, y1_cell + yc_rel         ##
+                w, h = w_rel, h_rel             #### Valores ainda em percentuais
+                x1, y1, x2, y2 = xc-w/2, yc-h/2, xc+w/2, yc+h/2     ##
+
+                x1, y1, x2, y2 = x1*imgw, y1*imgh, x2*imgw, y2*imgh
+                bboxes.append([prob, x1, y1, x2, y2])
+
+                draw.rectangle([x1, y1, x2, y2], fill=None, width=1, outline='black')
+                draw.rectangle([x1, y1-15, x2, y1], fill='black')
+                draw.text([x1+2, y1-13], f'{contador}:{round(100*prob)}%', fill='white')
+
+    return img_pil, bboxes
+
+def validacao(model, loss_fn, dataloader, device):
+    r"""
+    Retorna o valor da perda entre o predito pela rede e o anotado pelo dataset. É uma média das perdas de cada lote.
+    Args:  
+        model: modelo YOLO.
+        loss_fn: função perda, instanciada no treinamento.
+        dataloader: é o dataloader do teste.
+        device: cuda:0 ou cpu
+    
+    Returns:  
+        Tensor numérico, valor médio das perdas dos lotes do dataloader do conjunto de dados teste. 
+
+    """
+    model.eval()
+    test_loss = []
+    with torch.no_grad():
+        for imgs_tensor, target_tensor in tqdm(dataloader):
+            imgs_tensor, target_tensor = imgs_tensor.to(device), target_tensor.to(device)
+            output = model(imgs_tensor)
+            loss = loss_fn(output, target_tensor)
+            test_loss.append(loss.item())
+    
+    return np.array(test_loss).mean()
+
 
 def calculate_ious(predictions, targets):
     r"""

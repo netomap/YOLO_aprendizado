@@ -29,6 +29,9 @@ class yolo_dataset(Dataset):
             transforms.ToPILImage()
         ])
     
+    def get_random_img_pil(self):
+        return Image.open(choice(self.imgs_list))
+
     def __len__(self):
         return len(self.imgs_list)
     
@@ -57,6 +60,34 @@ class yolo_dataset(Dataset):
                 target_labels[i, j] = torch.tensor([1, xc_rel, yc_rel, w_rel, h_rel])
         
         return target_labels
+
+def preparar_dataset_e_dataloaders(S, C, B, IMG_SIZE, BATCH_SIZE, test_size=0.1, print_debug=True):
+    r"""
+    Função que prepara os dados em treino-teste.
+
+    Args: 
+        S (grid), C (n de classes), B (bounding boxes), IMG_SIZE (redimensionamendo das imagens).  
+        BATCH_SIZE (Tamanho do lote), test_size=0.1
+    
+    Returns: 
+        Retorna uma tupla de quatro elementos: 
+        train_dataset, test_dataset, train_dataloader, test_dataloader
+    """
+    df = pd.read_csv('annotations.csv')
+    imgs_list = df['img_path'].unique()
+    imgs_train, imgs_test = train_test_split(imgs_list, test_size=test_size, shuffle=True)
+
+    train_dataset = yolo_dataset(S, B, C, IMG_SIZE, imgs_train)
+    test_dataset = yolo_dataset(S, B, C, IMG_SIZE, imgs_test)
+
+    train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
+
+    if (print_debug):
+        print (f'len_train_dataset: {len(train_dataset)}, len_test_dataset: {len(test_dataset)}')
+        print (f'len_train_dataloader: {len(train_dataloader)}, len_test_dataloader: {len(test_dataloader)}')
+    
+    return train_dataset, test_dataset, train_dataloader, test_dataloader
 
 if __name__ == '__main__':
 
