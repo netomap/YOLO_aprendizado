@@ -20,7 +20,23 @@ def salvar_checkpoint(model, epochs):
     }
     torch.save(checkpoint, f'./models/checkpoint_{epochs}_epochs.pth')
 
-def salvar_resultado_uma_epoca(model, dataset, epoch, device):
+def predict(model, img_pil, transformer):
+    
+    model.eval()
+    img_tensor = transformer(img_pil)
+    img_tensor = img_tensor.unsqueeze(0)
+
+    with torch.no_grad():
+        predictions = model(img_tensor)
+    
+    predictions = predictions[0].detach().cpu()
+    S = model.S
+    predictions = predictions.reshape((S, S, 5))
+    img_pil, bboxes = desenhar_anotacoes(img_pil, predictions, S)
+
+    return img_pil, bboxes
+
+def salvar_resultado_uma_epoca(model, dataset, epoch, device, save_img=True):
     r"""
     Faz uma simples predição em uma imagem do conjunto de teste.  
     E salva na pasta ./results a imagem com as bboxes preditas pelo modelo.
@@ -30,9 +46,10 @@ def salvar_resultado_uma_epoca(model, dataset, epoch, device):
         dataset: Preferência pelo dataset do conjunto teste.
         epoch: Número da época em questão.
         device: cuda:0 ou cpu
+        save_img: default True. Salva a imagem no diretório ./results/
     
     Returns: 
-        None
+        bboxes: As anotações da predição do modelo.
 
     """
     if (not(os.path.exists('./results/'))):
@@ -51,9 +68,11 @@ def salvar_resultado_uma_epoca(model, dataset, epoch, device):
     predictions = predictions.reshape((S, S, 5))
     img_pil, bboxes = desenhar_anotacoes(img_pil, predictions, S)
 
-    img_pil.save(f'./results/result_{epoch}_epoch.jpg')
+    if (save_img):
+        img_pil.save(f'./results/result_{epoch}_epoch.jpg')
 
-    return None
+    return img_pil, bboxes
+
 
 def desenhar_anotacoes(img_pil, predictions_tensor, S, prob_threshold = 0.5, print_grid=False):
     r"""
