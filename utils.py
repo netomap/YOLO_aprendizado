@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from torchvision.ops.boxes import box_iou, _box_cxcywh_to_xyxy
+from PIL import Image, ImageDraw
 
 def calculate_ious(predictions, targets):
     r"""

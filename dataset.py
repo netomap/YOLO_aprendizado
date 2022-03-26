@@ -24,7 +24,7 @@ class yolo_dataset(Dataset):
             transforms.Normalize(mean=(.5, .5, .5), std=(.5, .5, .5))
         ])
 
-        self.transformer = transforms.Compose([
+        self.inv_transformer = transforms.Compose([
             transforms.Normalize(mean=(-1., -1., -1.), std=(2., 2., 2.)),
             transforms.ToPILImage()
         ])
@@ -34,8 +34,7 @@ class yolo_dataset(Dataset):
     
     def __getitem__(self, index):
         img_path = self.imgs_list[index]
-        img_pil = Image.open(img_path)
-        img_tensor = self.transformer(img_pil)
+        img_tensor = self.transformer(Image.open(img_path))
         annotations = self.annotations[self.annotations['img_path'] == img_path].values
 
         target_labels = self.preparar_anotacoes(annotations)
@@ -65,5 +64,5 @@ if __name__ == '__main__':
     imgs_list = df['img_path'].unique()
     dataset = yolo_dataset(4, 1, 1, 300, imgs_list)
 
-    img_tensor, bbox_tensor = choice(dataset)
-    print (f'img_tensor.shape: {img_tensor.shape}, bbox_tensor.shape: {bbox_tensor.shape}')
+    img_tensor, target_labels = choice(dataset)
+    print (f'img_tensor.shape: {img_tensor.shape}, bbox_tensor.shape: {target_labels.shape}')

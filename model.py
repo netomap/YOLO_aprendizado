@@ -48,7 +48,6 @@ class YOLO(nn.Module):
         input_test = torch.rand((1, 3, self.img_size, self.img_size))
         output = backbone(input_test)
         in_features_linear = output.shape[-1]
-        print (f'in_features: {in_features_linear}')
 
         self.net = nn.Sequential(
             backbone, 
