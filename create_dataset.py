@@ -1,9 +1,11 @@
+from operator import index
 import pandas as pd
 import numpy as np
 from PIL import Image, ImageDraw
 from random import random, choice, randint
 from argparse import ArgumentParser
 import os
+from tqdm import tqdm
 
 def random_color(clara=True):
     (valor_min, valor_max) = (150,255) if clara else (0,150)
@@ -34,7 +36,7 @@ def create_dataset(n_images):
         os.mkdir('./imgs')
     
     annotations = []
-    for k in range(n_images):
+    for k in tqdm(range(n_images), ncols=50):
         img_path = f'./imgs/img_{k:04}.jpg'
         img_pil, bbox = create_image()
         img_pil.save(img_path)
@@ -42,7 +44,7 @@ def create_dataset(n_images):
         annotations.append([img_path, imgw, imgh, xc, yc, w, h])
     
     df = pd.DataFrame(annotations, columns=['img_path', 'imgw', 'imgh', 'xc', 'yc', 'w', 'h'])
-    df.to_csv('annotations.csv')
+    df.to_csv('annotations.csv', index=False)
 
 
 if __name__ == '__main__':
