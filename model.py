@@ -11,7 +11,7 @@ class YOLO(nn.Module):
         self.S = S
         self.C = C
         self.B = B
-        self.img_size = IMG_SIZE
+        self.IMG_SIZE = IMG_SIZE
 
         backbone = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=64, kernel_size=5, stride=1, padding=0),
@@ -40,7 +40,7 @@ class YOLO(nn.Module):
             nn.Flatten()
         )
 
-        input_test = torch.rand((1, 3, self.img_size, self.img_size))
+        input_test = torch.rand((1, 3, self.IMG_SIZE, self.IMG_SIZE))
         output = backbone(input_test)
         in_features_linear = output.shape[-1]
 

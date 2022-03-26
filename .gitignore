@@ -4,3 +4,4 @@ models/
 annotations.csv
 testes.ipynb
 *.pth
+results/

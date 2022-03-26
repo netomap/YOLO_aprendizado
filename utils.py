@@ -7,7 +7,7 @@ import numpy as np
 from datetime import datetime
 import os
 
-def salvar_checkpoint(model, S, B, C, IMG_SIZE, epochs):
+def salvar_checkpoint(model, epochs):
 
     if (not(os.path.exists('./models/'))):
         os.mkdir('./models/')
@@ -49,7 +49,7 @@ def salvar_resultado_uma_epoca(model, dataset, epoch, device):
     predictions = predictions[0].detach().cpu()
     S = model.S
     predictions = predictions.reshape((S, S, 5))
-    img_pil, bboxes = desenhar_anotacoes(img_pil, predictions)
+    img_pil, bboxes = desenhar_anotacoes(img_pil, predictions, S)
 
     img_pil.save(f'./results/result_{epoch}_epoch.jpg')
 

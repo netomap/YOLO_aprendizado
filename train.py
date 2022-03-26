@@ -17,7 +17,7 @@ parser.add_argument('--imgsize', type=int, default=300, help='Tamanho a ser redi
 parser.add_argument('--batchsize', type=int, default=16, help='Tamanho do lote para treinamento da rede.')
 parser.add_argument('--testsize', type=float, default=0.1, help='Tamanho (em percentual) da divisão treino-teste para validação cruzada.')
 parser.add_argument('--lr', type=float, default=1e-3, help='LEARNING RATE')
-parser.add_argument('--e', type=float, default=10, help='Número de épocas para treinamento')
+parser.add_argument('--e', type=int, default=10, help='Número de épocas para treinamento')
 
 args = parser.parse_args()
 print (args)
