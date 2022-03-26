@@ -2,3 +2,4 @@ imgs/
 __pycache__/
 models/
 annotations.csv
+testes.ipynb
