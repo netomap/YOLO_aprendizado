@@ -21,7 +21,7 @@ def salvar_checkpoint(model, epochs):
     }
     torch.save(checkpoint, f'./models/checkpoint_{epochs}_epochs.pth')
 
-def predict(model, img_pil, transformer):
+def predict(model, img_pil, transformer, prob_threshold, print_grid):
     
     model.eval()
     img_tensor = transformer(img_pil)
@@ -33,7 +33,7 @@ def predict(model, img_pil, transformer):
     predictions = predictions[0].detach().cpu()
     S = model.S
     predictions = predictions.reshape((S, S, 5))
-    img_pil, bboxes = desenhar_anotacoes(img_pil, predictions, S)
+    img_pil, bboxes = desenhar_anotacoes(img_pil, predictions, S, prob_threshold=prob_threshold, print_grid=print_grid)
 
     return img_pil, bboxes
 
