@@ -5,9 +5,22 @@ import pandas as pd
 
 class YOLO_LOSS(nn.Module):
 
-    def __init__(self, S, B, C, IMG_SIZE):
+    def __init__(self, S, B, C, IMG_SIZE, lambda_coord, lambda_obj, lambda_noobj):
         super(YOLO_LOSS, self).__init__()
         r"""
+        Função que calcula a perda entre o predito pela rede YOLO e a sua target. 
+
+        Args:  
+            S: Número de Grids.
+            B: Número de box por células.
+            C: Número de classes do problema.
+            IMG_SIZE: Valor que as imagens são redimensionadas.
+            lambda_coord: Taxa de penalização para a perda das coordenadas.
+            lambda_obj: Taxa de penalização para a perda quando encontra um objeto.
+            lambda_noobj: Taxa de penalização para a perda quand não encontra objeto.
+        
+        Returns:  
+            loss: o valor da função perda.
         
         """
         self.S = S
@@ -15,8 +28,9 @@ class YOLO_LOSS(nn.Module):
         self.C = C
         self.img_size = IMG_SIZE
         self.mse = nn.MSELoss(reduction='sum')
-        self.lambda_noobj = 0.5
-        self.lambda_coord = 5
+        self.lambda_coord = lambda_coord
+        self.lambda_obj = lambda_obj
+        self.lambda_noobj = lambda_noobj
 
     def forward(self, predictions, targets):
         r"""
@@ -76,21 +90,31 @@ class YOLO_LOSS(nn.Module):
         
         loss = (
             box_loss * self.lambda_coord
-            + prob_exists_loss
+            + prob_exists_loss * self.lambda_obj
             + prob_noobj_loss * self.lambda_noobj
         )
+
+        # print (f'box_loss: {box_loss.item()}, exists_loss: {prob_exists_loss.item()}, noobj_loss: {prob_noobj_loss.item()}')
+        # print (f'box_loss: {box_loss.item()*self.lambda_coord}, exists_loss: {prob_exists_loss.item()*self.lambda_obj}, noobj_loss: {self.lambda_noobj*prob_noobj_loss.item()}')
 
         return loss
 
 
 if __name__ == '__main__':
 
-    from model import YOLO, S, C, B, IMG_SIZE
+    from model import YOLO
     from dataset import yolo_dataset
     from torch.utils.data import DataLoader
+    from model_architecture import model_architeture
 
-    model = YOLO(S, C, B, IMG_SIZE)
-    yolo_loss = YOLO_LOSS(S, B, C, IMG_SIZE)
+    S = 4
+    C = 1
+    B = 1
+    IMG_SIZE = 300
+
+    ma = model_architeture()
+    model = YOLO(S, C, B, IMG_SIZE, ma.architecture_config)
+    yolo_loss = YOLO_LOSS(S, B, C, IMG_SIZE, 1, 1, 10)
     df = pd.read_csv('annotations.csv')
     imgs_list = df['img_path'].unique()
     dataset = yolo_dataset(S, B, C, IMG_SIZE, imgs_list)

@@ -19,6 +19,9 @@ parser.add_argument('--batchsize', type=int, default=16, help='Tamanho do lote p
 parser.add_argument('--testsize', type=float, default=0.1, help='Tamanho (em percentual) da divisão treino-teste para validação cruzada.')
 parser.add_argument('--lr', type=float, default=1e-3, help='LEARNING RATE')
 parser.add_argument('--e', type=int, default=10, help='Número de épocas para treinamento')
+parser.add_argument('--lc', type=int, default=1, help='Taxa de penalização para a perda das coordenadas.')
+parser.add_argument('--lo', type=int, default=1, help='Taxa de penalização para a perda quando encontra algum objeto.')
+parser.add_argument('--lno', type=int, default=10, help='Taxa de penalização para a perda quando não encontra objeto.')
 
 args = parser.parse_args()
 print (args)
@@ -31,6 +34,9 @@ BATCH_SIZE = args.batchsize
 TEST_SIZE = args.testsize
 LEARNING_RATE = args.lr
 EPOCHS = args.e
+lambda_coord = args.lc
+lambda_obj = args.lo
+lambda_noobj = args.lno
 
 # ==================== DISPOSITIVO PARA TREINO ============================================
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -43,7 +49,7 @@ train_dataset, test_dataset, train_dataloader, test_dataloader = preparar_datase
 # ==================== PREPARAÇÃO DO DATASET ==============================================
 
 # ==================== PREPARAÇÃO DA FUNÇÃO PERDA =========================================
-yolo_loss = YOLO_LOSS(S, B, C, IMG_SIZE)
+yolo_loss = YOLO_LOSS(S, B, C, IMG_SIZE, lambda_coord, lambda_obj, lambda_noobj)
 yolo_loss.to(device)
 # ==================== PREPARAÇÃO DA FUNÇÃO PERDA =========================================
 
