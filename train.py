@@ -8,6 +8,7 @@ from tqdm import tqdm
 import numpy as np
 import argparse
 from tqdm import tqdm
+from model_architecture import model_architeture
 
 parser = argparse.ArgumentParser(description='Treinamento de uma rede neural YOLO.')
 parser.add_argument('--s', type=int, default=4, help='Número de grids para divisão da imagem')
@@ -47,7 +48,8 @@ yolo_loss.to(device)
 # ==================== PREPARAÇÃO DA FUNÇÃO PERDA =========================================
 
 # =========================== CRIANDO O MODELO E OTIMIZADOR ===============================
-model = YOLO(S, C, B, IMG_SIZE)
+ma = model_architeture()
+model = YOLO(S, C, B, IMG_SIZE, ma.architecture_config)
 model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 # =========================== CRIANDO O MODELO E OTIMIZADOR ===============================

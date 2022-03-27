@@ -16,7 +16,8 @@ def salvar_checkpoint(model, epochs):
         'state_dict': model.state_dict(),
         'datetime': datetime.now(),
         'S': model.S, 'B': model.B, 'C': model.C, 'IMG_SIZE': model.IMG_SIZE, 'epochs': epochs,
-        'descricao': str(model)
+        'descricao': str(model),
+        'architecture_config': model.architecture_config
     }
     torch.save(checkpoint, f'./models/checkpoint_{epochs}_epochs.pth')
 

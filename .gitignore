@@ -2,6 +2,6 @@ imgs/
 __pycache__/
 models/
 annotations.csv
-testes.ipynb
 *.pth
 results/
+testes2.ipynb
